@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/sikozonpc/ecom/internal/products"
 )
 
 func (app *application) mount() http.Handler {
@@ -26,6 +28,10 @@ func (app *application) mount() http.Handler {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("All is Well :)"))
 	})
+	productService := products.NewService(app.db)
+	producthandler := products.NewHandler(productService)
+
+	r.Get("/products", producthandler.Listproducts)
 
 	return r
 
@@ -45,12 +51,8 @@ func (app *application) run(h http.Handler) error {
 
 type application struct {
 	config *config
+	db     *sql.DB
 }
 type config struct {
 	addr string
-	db   dbConfig
-}
-
-type dbConfig struct {
-	dsn string
 }
